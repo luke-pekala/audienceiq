@@ -1,10 +1,10 @@
 /**
  * AudienceIQ — Main Entry Point
- * Wires DOM events → engine → renderer pipeline.
  */
 
 import '../css/main.css'
-import { analyzeHeuristic } from './engine.js'
+import { analyzeHeuristic }     from './engine.js'
+import { analyzeWithClaude, saveKey, loadKey, clearKey, hasKey } from './claude.js'
 import {
   renderMetrics, renderProfile, renderGaps,
   renderTone, renderJourney, renderBrief, resetUI
@@ -13,19 +13,24 @@ import { savePersona, renderLibrary } from './library.js'
 import { exportMarkdown, exportText, copyToClipboard } from './export.js'
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let currentResult = null
+let currentResult      = null
 let currentDescription = ''
-let activeTab = 'single'
+let activeTab          = 'single'
 
 // ── DOM REFS ──────────────────────────────────────────────────────────────────
-const audienceInput  = document.getElementById('audience-input')
-const charCountEl    = document.getElementById('char-count')
-const loadingBar     = document.getElementById('loading-bar')
-const analyzeBtn     = document.getElementById('analyze-btn')
-const clearBtn       = document.getElementById('clear-btn')
-const exportBtn      = document.getElementById('export-btn')
-const themeBtn       = document.getElementById('theme-btn')
-const toast          = document.getElementById('toast')
+const audienceInput = document.getElementById('audience-input')
+const charCountEl   = document.getElementById('char-count')
+const loadingBar    = document.getElementById('loading-bar')
+const analyzeBtn    = document.getElementById('analyze-btn')
+const clearBtn      = document.getElementById('clear-btn')
+const exportBtn     = document.getElementById('export-btn')
+const themeBtn      = document.getElementById('theme-btn')
+const toast         = document.getElementById('toast')
+const apiKeyInput   = document.getElementById('api-key-input')
+const apiSaveBtn    = document.getElementById('api-save-btn')
+const apiClearBtn   = document.getElementById('api-clear-btn')
+const apiStatus     = document.getElementById('api-status')
+const modeIndicator = document.getElementById('mode-indicator')
 
 // ── THEME ─────────────────────────────────────────────────────────────────────
 const savedTheme = localStorage.getItem('audienceiq_theme') || 'light'
@@ -40,30 +45,73 @@ themeBtn?.addEventListener('click', () => {
   themeBtn.textContent = next === 'dark' ? 'Light' : 'Dark'
 })
 
+// ── API KEY ───────────────────────────────────────────────────────────────────
+function updateApiStatus() {
+  if (!apiStatus || !modeIndicator) return
+  if (hasKey()) {
+    apiStatus.textContent   = 'Key saved ✓'
+    apiStatus.style.color   = 'var(--green)'
+    modeIndicator.textContent = 'claude ai'
+    modeIndicator.className = 'mode-badge mode-ai'
+    if (apiKeyInput) { apiKeyInput.value = '••••••••••••••••••••••••'; apiKeyInput.type = 'password' }
+    if (apiClearBtn) apiClearBtn.style.display = 'inline-flex'
+  } else {
+    apiStatus.textContent   = 'No key — using heuristics'
+    apiStatus.style.color   = 'var(--text-3)'
+    modeIndicator.textContent = 'heuristic'
+    modeIndicator.className = 'mode-badge mode-heuristic'
+    if (apiKeyInput) { apiKeyInput.value = ''; apiKeyInput.type = 'text' }
+    if (apiClearBtn) apiClearBtn.style.display = 'none'
+  }
+}
+
+apiSaveBtn?.addEventListener('click', () => {
+  const val = apiKeyInput?.value.trim()
+  if (!val || val.includes('•')) return
+  if (!val.startsWith('sk-ant-')) { showToast('Key should start with sk-ant-'); return }
+  saveKey(val)
+  updateApiStatus()
+  showToast('API key saved — Claude AI mode active.')
+})
+
+apiKeyInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') apiSaveBtn?.click()
+})
+
+apiKeyInput?.addEventListener('focus', () => {
+  if (apiKeyInput.type === 'password') { apiKeyInput.type = 'text'; apiKeyInput.value = '' }
+})
+
+apiClearBtn?.addEventListener('click', () => {
+  clearKey()
+  updateApiStatus()
+  showToast('API key removed.')
+})
+
+updateApiStatus()
+
 // ── TABS ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'))
     btn.classList.add('active')
     activeTab = btn.dataset.tab
-
     const singleView  = document.getElementById('single-view')
     const libraryView = document.getElementById('library-view')
     if (activeTab === 'library') {
-      singleView?.style && (singleView.style.display = 'none')
-      libraryView?.style && (libraryView.style.display = '')
+      if (singleView)  singleView.style.display  = 'none'
+      if (libraryView) libraryView.style.display = ''
       renderLibraryView()
     } else {
-      singleView?.style && (singleView.style.display = '')
-      libraryView?.style && (libraryView.style.display = 'none')
+      if (singleView)  singleView.style.display  = ''
+      if (libraryView) libraryView.style.display = 'none'
     }
   })
 })
 
 // ── CHAR COUNT ────────────────────────────────────────────────────────────────
 audienceInput?.addEventListener('input', () => {
-  const len = audienceInput.value.length
-  if (charCountEl) charCountEl.textContent = len + ' chars'
+  if (charCountEl) charCountEl.textContent = audienceInput.value.length + ' chars'
 })
 
 // ── CLEAR ─────────────────────────────────────────────────────────────────────
@@ -82,74 +130,64 @@ audienceInput?.addEventListener('keydown', e => {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 analyzeBtn?.addEventListener('click', runAnalysis)
 
-function runAnalysis() {
+async function runAnalysis() {
   const description = audienceInput?.value.trim() ?? ''
   if (description.length < 20) {
-    audienceInput.style.borderColor = 'var(--red)'
-    setTimeout(() => { if (audienceInput) audienceInput.style.borderColor = '' }, 1200)
+    if (audienceInput) { audienceInput.style.borderColor = 'var(--red)'; setTimeout(() => { audienceInput.style.borderColor = '' }, 1200) }
     showToast('Please describe your audience in more detail.')
     return
   }
 
-  const docType    = document.getElementById('doc-type')?.value    ?? ''
-  const domain     = document.getElementById('domain')?.value      ?? ''
+  const docType     = document.getElementById('doc-type')?.value    ?? ''
+  const domain      = document.getElementById('domain')?.value      ?? ''
   const deliverable = document.getElementById('deliverable')?.value ?? ''
 
-  // Loading state
-  if (loadingBar)  { loadingBar.style.opacity = '1' }
-  if (analyzeBtn)  { analyzeBtn.textContent = 'Analyzing…'; analyzeBtn.disabled = true }
-  if (exportBtn)   { exportBtn.disabled = true }
+  if (loadingBar) loadingBar.style.opacity = '1'
+  if (analyzeBtn) { analyzeBtn.textContent = 'Analyzing…'; analyzeBtn.disabled = true }
+  if (exportBtn)  exportBtn.disabled = true
 
-  // Simulate brief async delay (swap for real API call here)
-  setTimeout(() => {
-    try {
-      const result = analyzeHeuristic(description, docType, domain, deliverable)
-      currentResult      = result
-      currentDescription = description
-
-      renderMetrics(result.metrics)
-      renderProfile(result)
-      renderGaps(result.gaps)
-      renderTone(result)
-      renderJourney(result.journey)
-      renderBrief(result)
-
-      showToast('Analysis complete.')
-    } catch (err) {
-      console.error('Analysis error:', err)
-      showToast('Something went wrong — please try again.')
-    } finally {
-      if (loadingBar)  { loadingBar.style.opacity = '0' }
-      if (analyzeBtn)  { analyzeBtn.textContent = 'Analyze ⌘↵'; analyzeBtn.disabled = false }
-      if (exportBtn)   { exportBtn.disabled = false }
+  try {
+    let result
+    if (hasKey()) {
+      result = await analyzeWithClaude(description, docType, domain, deliverable)
+    } else {
+      await new Promise(r => setTimeout(r, 800))
+      result = analyzeHeuristic(description, docType, domain, deliverable)
     }
-  }, 900)
+
+    currentResult      = result
+    currentDescription = description
+
+    renderMetrics(result.metrics)
+    renderProfile(result)
+    renderGaps(result.gaps)
+    renderTone(result)
+    renderJourney(result.journey)
+    renderBrief(result)
+
+    showToast(hasKey() ? 'AI analysis complete.' : 'Analysis complete (heuristic mode).')
+  } catch (err) {
+    console.error('Analysis error:', err)
+    showToast(err.message || 'Something went wrong — please try again.')
+  } finally {
+    if (loadingBar) loadingBar.style.opacity = '0'
+    if (analyzeBtn) { analyzeBtn.textContent = 'Analyze ⌘↵'; analyzeBtn.disabled = false }
+    if (exportBtn)  exportBtn.disabled = false
+  }
 }
 
-// ── EXPORT BUTTON ─────────────────────────────────────────────────────────────
+// ── EXPORT ────────────────────────────────────────────────────────────────────
 exportBtn?.addEventListener('click', () => {
   if (!currentResult) return
-  exportMarkdown(
-    currentResult,
-    currentDescription,
-    document.getElementById('doc-type')?.value ?? '',
-    document.getElementById('domain')?.value ?? ''
-  )
+  exportMarkdown(currentResult, currentDescription, document.getElementById('doc-type')?.value ?? '', document.getElementById('domain')?.value ?? '')
 })
 
-// ── SAVE PERSONA ──────────────────────────────────────────────────────────────
 document.getElementById('save-persona-btn')?.addEventListener('click', () => {
   if (!currentResult) return
-  savePersona(
-    currentDescription,
-    document.getElementById('doc-type')?.value ?? '',
-    document.getElementById('domain')?.value ?? '',
-    currentResult
-  )
+  savePersona(currentDescription, document.getElementById('doc-type')?.value ?? '', document.getElementById('domain')?.value ?? '', currentResult)
   showToast('Persona saved to library.')
 })
 
-// ── COPY BRIEF ────────────────────────────────────────────────────────────────
 document.getElementById('copy-brief-btn')?.addEventListener('click', async () => {
   if (!currentResult) return
   const ok = await copyToClipboard(currentResult.briefText)
@@ -159,7 +197,6 @@ document.getElementById('copy-brief-btn')?.addEventListener('click', async () =>
   }
 })
 
-// ── EXPORT TEXT ───────────────────────────────────────────────────────────────
 document.getElementById('export-txt-btn')?.addEventListener('click', () => {
   if (!currentResult) return
   exportText(currentResult)
@@ -177,24 +214,19 @@ document.getElementById('gap-filter')?.addEventListener('click', e => {
   })
 })
 
-// ── LIBRARY VIEW ─────────────────────────────────────────────────────────────
+// ── LIBRARY ───────────────────────────────────────────────────────────────────
 function renderLibraryView() {
   const container = document.getElementById('library-grid')
   if (!container) return
   renderLibrary(container, persona => {
-    // Load persona back into analysis view
     if (audienceInput) audienceInput.value = persona.description
     if (charCountEl)   charCountEl.textContent = persona.description.length + ' chars'
     const docTypeEl = document.getElementById('doc-type')
     if (docTypeEl && persona.docType) docTypeEl.value = persona.docType
-    // Switch to single view and re-run
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'))
-    const singleTab = document.querySelector('.nav-tab[data-tab="single"]')
-    if (singleTab) singleTab.classList.add('active')
-    const singleView  = document.getElementById('single-view')
-    const libraryView = document.getElementById('library-view')
-    if (singleView)  singleView.style.display  = ''
-    if (libraryView) libraryView.style.display = 'none'
+    document.querySelector('.nav-tab[data-tab="single"]')?.classList.add('active')
+    document.getElementById('single-view').style.display  = ''
+    document.getElementById('library-view').style.display = 'none'
     activeTab = 'single'
     runAnalysis()
   })

@@ -26,11 +26,35 @@
   </ul>
 
   <div class="nav-right">
+    <span class="mode-badge mode-heuristic" id="mode-indicator">heuristic</span>
     <button class="btn-theme" id="theme-btn">Dark</button>
     <button class="btn-export" id="export-btn" disabled>⤓ Export brief</button>
     <span class="version-badge">v1.0-beta</span>
   </div>
 </nav>
+
+<!-- ── API KEY BANNER ───────────────────────────────────────────────────── -->
+<div class="api-banner">
+  <div class="api-banner-inner">
+    <div class="api-banner-left">
+      <span class="api-banner-label">Anthropic API key</span>
+      <span class="api-banner-sub" id="api-status">No key — using heuristics</span>
+    </div>
+    <div class="api-banner-right">
+      <input
+        id="api-key-input"
+        type="text"
+        placeholder="sk-ant-api03-…"
+        autocomplete="off"
+        spellcheck="false"
+        style="font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none;width:260px;transition:border-color var(--ease)"
+      />
+      <button class="btn btn-sm" id="api-save-btn">Save key</button>
+      <button class="btn btn-sm" id="api-clear-btn" style="display:none;color:var(--red)">Remove</button>
+    </div>
+  </div>
+  <p class="api-banner-note">Your key is stored only in your browser (localStorage) and sent only to api.anthropic.com — never to any other server. Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+</div>
 
 <!-- ── SINGLE PERSONA VIEW ─────────────────────────────────────────────── -->
 <div id="single-view">

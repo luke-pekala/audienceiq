@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — AudienceIQ</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/css/main.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <span class="nav-brand-mark">AQ</span>
+    <span class="nav-brand-name">AudienceIQ</span>
+  </a>
+  <div class="nav-right">
+    <button class="btn-theme" id="theme-btn">Dark</button>
+  </div>
+</nav>
+
+<div class="prose-page">
+  <h1>About AudienceIQ</h1>
+  <p class="page-sub">v1.0-beta · Built by Luke</p>
+
+  <h2>What it is</h2>
+  <p>AudienceIQ is an audience analysis tool for technical writers, documentation leads, and anyone responsible for producing written content that needs to land with a specific reader.</p>
+  <p>Most documentation fails because writers write for themselves — organised around their own knowledge, calibrated to their own vocabulary, paced to their own patience. AudienceIQ helps you escape that trap before you write a word.</p>
+
+  <h2>How it works</h2>
+  <p>Describe your audience in plain language. AudienceIQ analyses the description and returns:</p>
+  <ul>
+    <li>A knowledge profile with scored dimensions (technical depth, domain expertise, reading patience, jargon tolerance)</li>
+    <li>Knowledge gaps — the specific things your audience won't know that you'll assume they do</li>
+    <li>Tone and vocabulary guidance with explicit do/avoid lists</li>
+    <li>A reader journey map showing how your reader moves through a document</li>
+    <li>An exportable audience brief you can share with your team</li>
+  </ul>
+
+  <h2>Who built it</h2>
+  <p>AudienceIQ is App B in a 26-app documentation tooling portfolio, built as part of a structured journey toward a Product/Tools Developer role. The portfolio covers the full stack from vanilla JS through React, Node.js, Supabase, and Claude API integrations.</p>
+  <p>The app ideas are grounded in a systematic analysis of technical writing literature — 347+ validated pain points extracted from 11 books, ranked by cross-book confirmation count. Audience mismatch is one of the highest-confirmed pain points across the entire corpus.</p>
+
+  <h2>What's next</h2>
+  <p>The current version uses heuristic analysis. The next version will integrate the Claude API for deeper, more contextual persona generation. The upgrade slot is already built into the codebase — see <code>src/js/engine.js</code>.</p>
+</div>
+
+<footer class="footer">
+  <span class="footer-brand">AudienceIQ — audience analysis for writers who care about their readers.</span>
+  <ul class="footer-links">
+    <li><a href="/">App</a></li>
+    <li><a href="/src/pages/privacy.html">Privacy</a></li>
+    <li><a href="/src/pages/changelog.html">What's new</a></li>
+  </ul>
+</footer>
+
+<script>
+  const t = localStorage.getItem('audienceiq_theme') || 'light'
+  document.documentElement.setAttribute('data-theme', t)
+  const btn = document.getElementById('theme-btn')
+  if (btn) btn.textContent = t === 'dark' ? 'Light' : 'Dark'
+  btn?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const next = isDark ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('audienceiq_theme', next)
+    btn.textContent = next === 'dark' ? 'Light' : 'Dark'
+  })
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AudienceIQ — Know Your Reader Before You Write</title>
+  <meta name="description" content="AI-powered audience analysis for technical writers. Build reader personas, detect knowledge gaps, and get tone recommendations before you write a single word." />
+  <meta name="og:title" content="AudienceIQ — Audience Analysis for Technical Writers" />
+  <meta name="og:description" content="Know your reader before you write a single word." />
+  <meta name="og:type" content="website" />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+<!-- ── NAVIGATION ──────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <span class="nav-brand-mark">AQ</span>
+    <span class="nav-brand-name">AudienceIQ</span>
+  </a>
+
+  <ul class="nav-tabs">
+    <li><button class="nav-tab active" data-tab="single">Single persona</button></li>
+    <li><button class="nav-tab" data-tab="library">Persona library</button></li>
+  </ul>
+
+  <div class="nav-right">
+    <button class="btn-theme" id="theme-btn">Dark</button>
+    <button class="btn-export" id="export-btn" disabled>⤓ Export brief</button>
+    <span class="version-badge">v1.0-beta</span>
+  </div>
+</nav>
+
+<!-- ── SINGLE PERSONA VIEW ─────────────────────────────────────────────── -->
+<div id="single-view">
+<main class="wrapper">
+
+  <!-- 01 INPUT ─────────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">01&nbsp;&nbsp;Describe your audience</div>
+
+    <textarea
+      id="audience-input"
+      style="width:100%;min-height:120px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-family:var(--sans);font-size:14px;color:var(--text);resize:vertical;outline:none;line-height:1.6;transition:border-color var(--ease)"
+      placeholder="e.g. Senior software engineers at mid-size SaaS companies. They know REST APIs, use CLI tools daily, and are comfortable with TypeScript. They read docs to solve problems, not to learn — they scan headings and jump to code examples. They have zero patience for marketing language or lengthy conceptual intros."
+    ></textarea>
+
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <select id="doc-type" style="font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath d=%22M0 0l5 6 5-6z%22 fill=%22%23999%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center;padding-right:24px">
+        <option value="">Doc type</option>
+        <option value="API Reference">API Reference</option>
+        <option value="User Guide">User Guide</option>
+        <option value="Quick Start">Quick Start</option>
+        <option value="Tutorial">Tutorial</option>
+        <option value="Runbook">Runbook</option>
+        <option value="Whitepaper">Whitepaper</option>
+        <option value="Proposal">Proposal</option>
+        <option value="Release Notes">Release Notes</option>
+      </select>
+      <select id="domain" style="font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath d=%22M0 0l5 6 5-6z%22 fill=%22%23999%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center;padding-right:24px">
+        <option value="">Domain</option>
+        <option value="Software / DevTools">Software / DevTools</option>
+        <option value="Fintech">Fintech</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Enterprise SaaS">Enterprise SaaS</option>
+        <option value="Hardware">Hardware</option>
+        <option value="Legal / Compliance">Legal / Compliance</option>
+        <option value="Education">Education</option>
+      </select>
+      <select id="deliverable" style="font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath d=%22M0 0l5 6 5-6z%22 fill=%22%23999%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center;padding-right:24px">
+        <option value="">Deliverable</option>
+        <option value="External / public">External / public</option>
+        <option value="Internal team">Internal team</option>
+        <option value="Regulatory submission">Regulatory submission</option>
+        <option value="Sales enablement">Sales enablement</option>
+        <option value="Customer onboarding">Customer onboarding</option>
+      </select>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-3)" id="char-count">0 chars</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="clear-btn">Clear</button>
+        <button class="btn btn-primary btn-lg" id="analyze-btn">Analyze ⌘↵</button>
+      </div>
+    </div>
+
+    <div class="loading-bar" id="loading-bar" style="opacity:0">
+      <div class="loading-bar-fill"></div>
+    </div>
+  </section>
+
+  <!-- 02 RESULTS ───────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">02&nbsp;&nbsp;Analysis results</div>
+
+    <div class="metrics-strip">
+      <div class="metric-cell">
+        <span class="metric-val empty" id="m-tech-depth">—</span>
+        <span class="metric-label">Tech depth</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val empty" id="m-gap-count">—</span>
+        <span class="metric-label">Gaps found</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val empty" id="m-vocab">—</span>
+        <span class="metric-label">Vocab level</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val empty" id="m-tone">—</span>
+        <span class="metric-label">Tone score</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val empty" id="m-confidence">—</span>
+        <span class="metric-label">Confidence</span>
+      </div>
+    </div>
+
+    <div id="placeholder-02" class="placeholder" style="margin-top:16px">
+      Run an analysis to see knowledge profile and vocabulary guidance
+    </div>
+
+    <div id="profile-grid" class="two-col" style="display:none">
+      <div class="card">
+        <div class="card-title">Knowledge profile</div>
+        <div id="bars-container"></div>
+        <div class="tag-row" id="traits-container"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Vocabulary guidance</div>
+        <div id="vocab-container"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 GAPS ──────────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">03&nbsp;&nbsp;Knowledge gaps</div>
+
+    <div id="placeholder-03" class="placeholder">
+      Run an analysis to see knowledge gap detection
+    </div>
+
+    <div id="gap-section-content" style="display:none">
+      <div class="filter-bar" id="gap-filter">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="high">High</button>
+        <button class="filter-btn" data-filter="medium">Medium</button>
+        <button class="filter-btn" data-filter="low">Low</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:100px">Severity</th>
+              <th style="width:220px">Gap</th>
+              <th>What to do</th>
+            </tr>
+          </thead>
+          <tbody id="gap-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 TONE ──────────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">04&nbsp;&nbsp;Tone &amp; vocabulary</div>
+
+    <div id="placeholder-04" class="placeholder">
+      Run an analysis to see tone recommendations
+    </div>
+
+    <div id="tone-content" style="display:none">
+      <div class="spectrum-wrap">
+        <div class="spectrum-row">
+          <span class="spectrum-end">Formal</span>
+          <div class="spectrum-track">
+            <div class="spectrum-fill" id="spectrum-fill"></div>
+            <div class="spectrum-thumb" id="spectrum-thumb"></div>
+          </div>
+          <span class="spectrum-end">Casual</span>
+        </div>
+      </div>
+      <div class="tone-split">
+        <div class="tone-col">
+          <div class="tone-col-header">
+            <span class="tone-dot tone-dot-use"></span> Use
+          </div>
+          <div id="tone-use-list"></div>
+        </div>
+        <div class="tone-col">
+          <div class="tone-col-header">
+            <span class="tone-dot tone-dot-avoid"></span> Avoid
+          </div>
+          <div id="tone-avoid-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 JOURNEY ───────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">05&nbsp;&nbsp;Reader journey</div>
+
+    <div id="placeholder-05" class="placeholder">
+      Run an analysis to see the reader journey map
+    </div>
+
+    <div id="journey-content" style="display:none">
+      <div class="journey-list" id="journey-list"></div>
+    </div>
+  </section>
+
+  <!-- 06 BRIEF ─────────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-label">06&nbsp;&nbsp;Audience brief</div>
+
+    <div id="placeholder-06" class="placeholder">
+      Run an analysis to generate an exportable audience brief
+    </div>
+
+    <div id="brief-content" style="display:none">
+      <div class="brief-card">
+        <div class="brief-header">
+          <div class="brief-header-meta">
+            <div class="brief-title" id="brief-persona-name">Audience Brief</div>
+            <div class="brief-subtitle" id="brief-generated-at">Generated —</div>
+          </div>
+          <div class="brief-actions">
+            <button class="btn btn-sm" id="copy-brief-btn">Copy</button>
+            <button class="btn btn-sm" id="export-txt-btn">Plain text</button>
+            <button class="btn btn-sm" id="save-persona-btn">Save persona</button>
+          </div>
+        </div>
+        <div class="brief-text" id="brief-text"></div>
+        <div class="brief-stats" id="brief-stats"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<!-- ── LIBRARY VIEW ────────────────────────────────────────────────────── -->
+<div id="library-view" style="display:none">
+  <main class="wrapper">
+    <section class="section">
+      <div class="section-label">Persona library</div>
+      <div class="library-grid" id="library-grid"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <span class="footer-brand">AudienceIQ — audience analysis for writers who care about their readers.</span>
+  <ul class="footer-links">
+    <li><a href="/src/pages/about.html">About</a></li>
+    <li><a href="/src/pages/privacy.html">Privacy</a></li>
+    <li><a href="/src/pages/changelog.html">What's new</a></li>
+  </ul>
+</footer>
+
+<!-- ── TOAST ───────────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/src/js/main.js"></script>
+</body>
+</html>

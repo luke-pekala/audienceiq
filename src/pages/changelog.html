@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog — AudienceIQ</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/css/main.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <span class="nav-brand-mark">AQ</span>
+    <span class="nav-brand-name">AudienceIQ</span>
+  </a>
+  <div class="nav-right">
+    <button class="btn-theme" id="theme-btn">Dark</button>
+  </div>
+</nav>
+
+<div class="prose-page">
+  <h1>What's new</h1>
+  <p class="page-sub">AudienceIQ release history</p>
+
+  <div class="changelog-entry">
+    <div class="changelog-version">
+      v1.0-beta
+      <span class="changelog-date">May 2026</span>
+      <span class="tag tag-green">Current</span>
+    </div>
+    <ul>
+      <li>Initial release with heuristic analysis engine</li>
+      <li>Six analysis sections: results, knowledge profile, gaps, tone, reader journey, audience brief</li>
+      <li>Persona library with localStorage persistence</li>
+      <li>Export to Markdown and plain text</li>
+      <li>Dark mode with system preference detection</li>
+      <li>Filter knowledge gaps by severity</li>
+      <li>Keyboard shortcut: ⌘↵ to run analysis</li>
+      <li>Responsive layout down to mobile widths</li>
+    </ul>
+  </div>
+
+  <div class="changelog-entry" style="opacity:0.55">
+    <div class="changelog-version">
+      v1.1 — Claude API integration
+      <span class="changelog-date">Coming soon</span>
+      <span class="tag tag-amber">Planned</span>
+    </div>
+    <ul>
+      <li>Replace heuristic engine with Claude API calls for deeper, contextual analysis</li>
+      <li>Multi-audience mode: generate and compare personas for mixed-audience documents</li>
+      <li>Notion export integration</li>
+      <li>Shareable brief links</li>
+    </ul>
+  </div>
+</div>
+
+<footer class="footer">
+  <span class="footer-brand">AudienceIQ — audience analysis for writers who care about their readers.</span>
+  <ul class="footer-links">
+    <li><a href="/">App</a></li>
+    <li><a href="/src/pages/about.html">About</a></li>
+    <li><a href="/src/pages/privacy.html">Privacy</a></li>
+  </ul>
+</footer>
+
+<script>
+  const t = localStorage.getItem('audienceiq_theme') || 'light'
+  document.documentElement.setAttribute('data-theme', t)
+  const btn = document.getElementById('theme-btn')
+  if (btn) btn.textContent = t === 'dark' ? 'Light' : 'Dark'
+  btn?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const next = isDark ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('audienceiq_theme', next)
+    btn.textContent = next === 'dark' ? 'Light' : 'Dark'
+  })
+</script>
+</body>
+</html>

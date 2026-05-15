@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy — AudienceIQ</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/css/main.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <span class="nav-brand-mark">AQ</span>
+    <span class="nav-brand-name">AudienceIQ</span>
+  </a>
+  <div class="nav-right">
+    <button class="btn-theme" id="theme-btn">Dark</button>
+  </div>
+</nav>
+
+<div class="prose-page">
+  <h1>Privacy</h1>
+  <p class="page-sub">Last updated May 2026</p>
+
+  <h2>What we collect</h2>
+  <p>In the current heuristic version, AudienceIQ processes all text entirely in your browser. No audience descriptions or analysis results are sent to any server. Nothing is stored remotely.</p>
+  <p>Saved personas are stored in your browser's <code>localStorage</code> and never leave your device.</p>
+
+  <h2>When the Claude API is enabled</h2>
+  <p>The next version will optionally use the Anthropic Claude API to generate deeper analysis. When that feature is active, your audience description will be sent to Anthropic's API for processing. Anthropic's privacy policy will apply to that data. You will be notified clearly when API processing is enabled.</p>
+
+  <h2>Analytics</h2>
+  <p>This app does not use third-party analytics, tracking pixels, or advertising. There are no cookies beyond what the browser itself uses.</p>
+
+  <h2>Contact</h2>
+  <p>Questions? Open an issue on the <a href="https://github.com" target="_blank" rel="noopener">GitHub repository</a>.</p>
+</div>
+
+<footer class="footer">
+  <span class="footer-brand">AudienceIQ — audience analysis for writers who care about their readers.</span>
+  <ul class="footer-links">
+    <li><a href="/">App</a></li>
+    <li><a href="/src/pages/about.html">About</a></li>
+    <li><a href="/src/pages/changelog.html">What's new</a></li>
+  </ul>
+</footer>
+
+<script>
+  const t = localStorage.getItem('audienceiq_theme') || 'light'
+  document.documentElement.setAttribute('data-theme', t)
+  const btn = document.getElementById('theme-btn')
+  if (btn) btn.textContent = t === 'dark' ? 'Light' : 'Dark'
+  btn?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const next = isDark ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('audienceiq_theme', next)
+    btn.textContent = next === 'dark' ? 'Light' : 'Dark'
+  })
+</script>
+</body>
+</html>
